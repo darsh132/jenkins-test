@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome and Debug React",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "webpack://src/*": "${webRoot}/*",
+                "webpack://./*": "${webRoot}/*"
+            },
+            "trace": true
+        },
+        {
+            "type": "chrome",
+            "request": "attach",
+            "name": "Attach to Chrome (Already Running)",
+            "port": 9222,
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "webpack://src/*": "${webRoot}/*",
+                "webpack://./*": "${webRoot}/*"
+            },
+            "trace": true
+        }
+    ]
+}

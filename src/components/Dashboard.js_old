@@ -1,0 +1,298 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Sidebar } from "./Sidebar";
+import Footer from "./Footer";
+import { motion } from "framer-motion";
+import ChatContainer from "./ChatContainer";
+import { useAuth } from "../Auth/Authcontext"; 
+import { ArrowLeft, Puzzle } from "lucide-react";
+import ArtifactsContainer from "./ArtifactsContainer";
+
+const Dashboard = () => {
+  const { authData } = useAuth(); 
+  const navigate = useNavigate();
+  const { sessionId, nc } = useParams();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
+  const [lastSession, setLastSession] = useState("");
+  const contextWindowLimit = 10; // Limit the number of messages in the context window
+  const [currentModel, setCurrentModel] = useState('ChatGPT'); // State to track the current model
+  const [conversations, setConversations] = useState([{ messages: [], isProcessing: false }]);
+  const [currentBranchIndex, setCurrentBranchIndex] = useState(0);
+  const [artifacts, setArtifacts] = useState([]);
+  const [isArtifactOpen, setIsArtifactOpen] = useState(false);
+
+
+  useEffect(() => {
+    if (!authData.sessionId) {
+      navigate('/signin'); 
+      return; 
+    }
+
+    const fetchNewChat = async () => {
+      if (nc || !sessionId) {
+        try {
+          const response = await fetch(
+            `http://192.168.0.235:3002/newchat?username=${authData.user}`
+          );
+          const data = await response.json();
+          if (data.sessionId) {
+            setLastSession(data.sessionId);
+          }
+        } catch (error) {
+          console.error("Error fetching new chat:", error);
+        }
+      } else if (sessionId) {
+        setLastSession(sessionId);
+      }
+    };
+
+    fetchNewChat();
+  }, [authData.sessionId, sessionId, nc, authData.user, navigate]);
+
+  const fetchAIResponse = async (contextMessages, currentModel) => {
+    let url = currentModel === 'Claude 3.5 Sonnet' 
+        ? "http://192.168.0.235:3002/claudeai" 
+        : "http://192.168.0.235:3002/callChatGPT";
+    //console.log'conversations: ', conversations);
+    //console.log'currentbranchIndex:', currentBranchIndex);
+    //return;
+    
+    if (!lastSession) return;
+
+    //console.logcontextMessages);
+    
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                history: contextMessages,
+                sessionId: lastSession,
+                branchindex: currentBranchIndex,
+                username: authData.user, 
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        //console.log'data', data);
+        return data.result || "No response from AI.";
+    } catch (error) {
+        console.error("Error fetching AI response:", error);
+        return "Error: Unable to fetch AI response.";
+    }
+  };
+
+  const onSendMessage = async (userMessage, isNew, currentModel) => {
+    const newUserMessage = { userMessage, aiMessage: null };
+let contextMessages = [];
+
+if (isNew !== 1) {
+  setConversations((prev) => {
+    const newConversations = [...prev];
+    
+    let newBranchIndex = currentBranchIndex;
+    const currentConversation = newConversations[newBranchIndex];
+
+    const updatedMessages = [...currentConversation.messages, newUserMessage];
+    contextMessages = updatedMessages.slice(-contextWindowLimit);
+
+    newConversations[newBranchIndex] = { 
+      ...currentConversation, 
+      messages: updatedMessages, 
+      isProcessing: true 
+    };
+
+    return newConversations;
+  });
+} else {
+  contextMessages = [newUserMessage]; 
+}
+  
+    try {
+      const aiMessage = await fetchAIResponse(contextMessages, currentModel);
+      setConversations((prev) => {
+        const newConversations = [...prev];
+        const currentConversation = newConversations[currentBranchIndex];
+  
+        const updatedMessages = currentConversation.messages.map((msg, index) =>
+          index === currentConversation.messages.length - 1
+            ? { ...msg, aiMessage }
+            : msg
+        );
+  
+        newConversations[currentBranchIndex] = {
+          ...currentConversation,
+          messages: updatedMessages,
+          isProcessing: false,
+        };
+  
+        return newConversations;
+      });
+    } catch (error) {
+      console.error("Error fetching AI response:", error);
+      setConversations((prev) => {
+        const newConversations = [...prev];
+        if (newConversations[currentBranchIndex]) {
+          newConversations[currentBranchIndex].isProcessing = false;
+        }
+        return newConversations;
+      });
+    }
+  };
+  
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      if (!lastSession) return;
+
+      try {
+        const response = await fetch(
+          `http://192.168.0.235:3002/getchat?sessionId=${lastSession}`
+        );
+        const history = await response.json();
+
+        const processedMessages = history.map((message) => {
+          let userMessage = message.userMessage;
+
+          if (userMessage?.startsWith("[") && userMessage.endsWith("]")) {
+            try {
+              const parsed = JSON.parse(userMessage);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                userMessage = parsed[parsed.length - 1].userMessage; 
+              }
+            } catch (error) {
+              userMessage = "Invalid message format";
+            }
+          }
+        
+          return { userMessage, aiMessage: message.aiMessage };
+        });
+        
+        if (processedMessages.length > 0) {
+          setConversations([{ messages: processedMessages, isProcessing: false }]);
+        }
+      } catch (error) {
+      }
+    };
+
+    fetchChatHistory();
+  }, [lastSession]);
+
+  const handleSidebarToggle = (isPinned) => {
+    setIsSidebarPinned(isPinned);
+  };
+
+  const handleBranchChange = (index) => {
+    setCurrentBranchIndex(index);
+  };
+
+  return (
+    <div className="h-full font-serif text-gray-800">
+      <div className="fixed bg-[#e0e7ff] bg-opacity-30 backdrop-blur-md w-full z-10">
+        <motion.img
+          src="https://escanav.com/en/images/escan7.png"
+          alt="Logo"
+          className="hidden md:block h-16 ml-12 py-2"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, ease: "easeInOut" }}
+        />
+      </div>
+      <Sidebar onSidebarToggle={handleSidebarToggle} />
+
+
+      <div
+      className={`relative h-screen flex transition-all duration-500 ease-in-out ${
+        isSidebarPinned ? "ml-52" : "ml-6"
+      }`}
+    >
+      <div
+        className={`flex flex-col-2 flex-1 ${artifacts.length > 0 ? "lg:grid lg:grid-cols-[2fr_1fr]" : ""} p-4 overflow-hidden transition-all duration-500 ease-in-out`}
+      >
+        <div className="flex-grow overflow-y-auto custom-scrollbar">
+          <ChatContainer
+            messages={conversations[0].messages}
+            isProcessing={isProcessing}
+            hasMore={hasMore}
+            onStop={() => setIsProcessing(false)}
+            onRegenerate={() => //console.log"Regenerate functionality triggered")}
+            onSendMessage={onSendMessage}
+            conversations={conversations}
+            setConversations={setConversations}
+            setArtifacts={setArtifacts}
+            currentBranchIndex={currentBranchIndex}
+            setCurrentBranchIndex={setCurrentBranchIndex}
+          />
+          <div className={`flex ${artifacts.length > 0 ? "sticky bottom-0" : "fixed bottom-0"} max-w-64`}>
+            <Footer
+              onSendMessage={onSendMessage}
+              isProcessing={isProcessing}
+              currentModel={currentModel}
+              setCurrentModel={setCurrentModel}
+              setSelectedFile={setSelectedFile}
+              setFileType={setFileType}
+            />
+          </div>
+        </div>
+      </div>
+
+      {artifacts.length > 0 && (
+      <div
+        className={`hidden md:block w-96 h-screen fixed right-0 top-0 p-4 border-l border-gray-300 overflow-y-auto custom-scrollbar transition-all ${
+          isArtifactOpen ? "lg:relative lg:w-full" : ""
+        }`}
+      >
+        <ArtifactsContainer artifact={artifacts} />
+      </div>
+    )}
+      {isArtifactOpen && (
+        <div className="fixed inset-0 bg-[#e0e7ff] bg-opacity-30 backdrop-blur-md flex z-50">
+          <div className="w-full m-8 max-w-lg p-6 rounded-lg shadow-lg relative bg-white">
+            <button
+              className="absolute top-3 left-3 text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              onClick={() => setIsArtifactOpen(false)}
+            >
+              <ArrowLeft size={20} /> Back
+            </button>
+            <ArtifactsContainer artifact={artifacts} />
+          </div>
+        </div>
+      )}
+        <button
+          className="fixed top-20 right-5 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition flex items-center gap-2"
+          onClick={() => setIsArtifactOpen(true)}
+        >
+          <Puzzle size={20} /> 
+        </button>
+    </div>
+
+    <style>
+  {`
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 0px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+    }
+  `}
+</style>
+    </div>
+  );
+  
+  
+};
+
+export default Dashboard;

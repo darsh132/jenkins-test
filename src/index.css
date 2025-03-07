@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.escan-bg {
+    background: var(--escan-primary);
+    background: linear-gradient(135deg, var(--escan-primary) 0%, var(--escan-secondary) 100%);
+}

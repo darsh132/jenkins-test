@@ -1,0 +1,59 @@
+import { useChat } from "../context/ChatContext";
+import { Message } from "./Actions";
+import { motion } from "framer-motion";
+import { useAuth } from "../context/Authcontext";
+
+const ChatContainer = ({ setArtifacts }) => {
+  const { conversations, onSendMessage, currentBranchIndex } = useChat();
+  const { authData } = useAuth();
+
+  console.log('currentConversation:', conversations);
+  console.log('currentBranchIndex:', currentBranchIndex);
+
+  console.log('Conversation :', JSON.stringify(conversations));
+  
+
+  const currentConversation = conversations?.[`conversation ${currentBranchIndex}`] ?? [];
+
+
+
+  console.log('currentConversation:', currentConversation);
+  console.log('Type of currentConversation:', typeof currentConversation);
+  console.log('Is Array:', Array.isArray(currentConversation));
+
+  return (
+    <div className="flex flex-col space-y-4 p-4 max-w-2xl mx-auto">
+      {currentConversation.length > 0 ? (
+        currentConversation.map((message, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            {message.userMessage && (
+              <Message
+                message={message.userMessage}
+                role={authData.user?.charAt(0)}
+                onSendMessage={onSendMessage}
+                currentBranchIndex={currentBranchIndex}
+                conversations={conversations}
+              />
+            )}
+            {message.aiMessage && (
+              <Message
+                message={message.aiMessage}
+                role="assistant"
+                setArtifacts={setArtifacts}
+              />
+            )}
+          </motion.div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-center">No messages yet.</p>
+      )}
+    </div>
+  );
+};
+
+export default ChatContainer;
