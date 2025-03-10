@@ -2,7 +2,8 @@ pipeline {
     agent any
     environment {
         NODE_VERSION = '18'
-        NODEJS_PATH = 'C:\\Program Files\\nodejs' // Ensure this matches your Node.js installation path
+        NODEJS_PATH = 'C:\\Program Files\\nodejs'
+        CI = 'false'  // Ensure CI is false globally
     }
     stages {
         stage('Clone Repository') {
@@ -14,27 +15,31 @@ pipeline {
             steps {
                 script {
                     bat 'echo Current PATH=%NODEJS_PATH%'
-                    bat 'where node'  // Check where Node.js is installed
-                    bat 'where npm'   // Check where npm is installed
+                    bat 'where node'
+                    bat 'where npm'
                 }
             }
         }
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Ensure Node.js is added to PATH only if not already present
                     if (!env.PATH.contains(NODEJS_PATH)) {
                         env.PATH = "${NODEJS_PATH};${env.PATH}"
                     }
                 }
-                bat 'node -v'  // Verify Node.js installation
-                bat 'npm -v'   // Verify npm installation
-                bat 'set CI=false && npm install --legacy-peer-deps --no-audit --no-fund'
+                bat 'node -v'
+                bat 'npm -v'
+                bat 'npm install --legacy-peer-deps --no-audit --no-fund'
             }
         }
         stage('Build') {
             steps {
-                bat 'set CI=false && npm run build'  // Prevent CI mode from treating warnings as errors
+                bat '''
+                setlocal
+                set CI=false
+                npm run build
+                endlocal
+                '''
             }
         }
         stage('Test') {
