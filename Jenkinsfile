@@ -59,5 +59,31 @@ pipeline {
                 '''
             }
         }
+        stage('Post Deployment API Calls') {
+            steps {
+                bat '''
+                curl -X POST "http://192.168.0.150:8181/z" ^
+                     -H "Content-Type: application/json" ^
+                     -H "charsets: utf-8" ^
+                     -H "X-Forwarded-For: 192.168.0.150" ^
+                     -H "X-Username: admin" ^
+                     --data-raw "{\\"services\\":\\"z\\",\\"head\\":\\"lookup\\",\\"action\\":\\"set\\",\\"parameters\\":{\\"dig\\":{\\"url\\":\\"http://dev-escanai\\",\\"dnsIp\\":\\"8.8.8.8\\"}}}"
+                     
+                curl -X POST "http://192.168.0.150:8181/z" ^
+                     -H "Content-Type: application/json" ^
+                     -H "charsets: utf-8" ^
+                     -H "X-Forwarded-For: 192.168.0.150" ^
+                     -H "X-Username: admin" ^
+                     --data-raw "{\\"services\\":\\"z\\",\\"head\\":\\"spiderScanData\\",\\"parameters\\":[{\\"scanList\\":{\\"dateUTC\\":{\\"after\\":\\"0\\"},\\"spiderScanId\\":{\\"noteq\\":\\"0\\"}}}],\\"action\\":\\"get\\"}"
+                     
+                curl -X POST "http://192.168.0.150:8181/z" ^
+                     -H "Content-Type: application/json" ^
+                     -H "charsets: utf-8" ^
+                     -H "X-Forwarded-For: 192.168.0.150" ^
+                     -H "X-Username: admin" ^
+                     --data-raw "{\\"services\\":\\"z\\",\\"head\\":\\"spiderScan\\",\\"action\\":\\"set\\",\\"parameters\\":{\\"scan\\":{\\"url\\":\\"http://dev-escanai\\",\\"maxChildren\\":\\"0\\",\\"recurse\\":true,\\"contextName\\":\\"\\",\\"subtreeOnly\\":true,\\"mode\\":true,\\"alertLimit\\":10000}},\\"parametersActiveScan\\":{\\"recurse\\":true,\\"inScopeOnly\\":false,\\"scanPolicyName\\":\\"Default Policy\\"}}"
+                '''
+            }
+        }
     }
 }
