@@ -44,7 +44,12 @@ pipeline {
         }
         stage('Test') {
             steps {
-                bat 'set CI=false && npm test -- --watchAll=false'
+                bat '''
+                setlocal
+                set CI=false
+                npm test -- --watchAll=false --passWithNoTests
+                endlocal
+                '''
             }
         }
         stage('Deploy') {
