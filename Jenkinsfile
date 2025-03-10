@@ -4,6 +4,7 @@ pipeline {
         NODE_VERSION = '18'
         NODEJS_PATH = 'C:\\Program Files\\nodejs'
         CI = 'false'  // Ensure CI is false globally
+        API_KEY = '<API_KEY>' // Replace with your actual API key
     }
     stages {
         stage('Clone Repository') {
@@ -18,6 +19,29 @@ pipeline {
                     bat 'where node'
                     bat 'where npm'
                 }
+            }
+        }
+        stage('Pre-Deployment API Calls') {
+            steps {
+                bat '''
+                :: Set Lookup 
+                 curl -X POST "http://192.168.0.150:8181/api/lookup" ^
+                     -H "Content-Type: application/json" ^
+                     -H "Authorization: Bearer 56576214b49c5033" ^
+                     --data-raw "{"url":"http://dev-escanai"}"
+
+                :: Set Context Method
+                curl -X POST "http://192.168.0.150:8181/api/setContext" ^
+                     -H "Content-Type: application/json" ^
+                     -H "Authorization: Bearer 56576214b49c5033" ^
+                     --data-raw "{\"contextName\":\"Custom Context\",\"authType\":\"HTTP\",\"users\":[{\"username\":\"js@escanav.com\"}],\"forcedUserMode\":true}"
+
+                :: Set Authentication Method
+                curl -X POST "http://192.168.0.150:8181/api/setAuthentication" ^
+                     -H "Content-Type: application/json" ^
+                     -H "Authorization: Bearer 56576214b49c5033" ^
+                     --data-raw "{\"contextName\":\"Custom Context\",\"authMethod\":\"Form-based\",\"loginUrl\":\"http://dev-escanai/signin\",\"loginParams\":\"username=js@escanav.com&password=JS12JS\",\"testUrl\":\"http://dev-escanai/dashboard\"}"
+                '''
             }
         }
         stage('Install Dependencies') {
@@ -59,29 +83,20 @@ pipeline {
                 '''
             }
         }
-        stage('Post Deployment API Calls') {
+        stage('Post-Deployment API Calls') {
             steps {
                 bat '''
-                curl -X POST "http://192.168.0.150:8181/z" ^
+                :: Initiate Spider Scan
+                curl -X POST "http://192.168.0.150:8181/api/spiderScan" ^
                      -H "Content-Type: application/json" ^
-                     -H "charsets: utf-8" ^
-                     -H "X-Forwarded-For: 192.168.0.150" ^
-                     -H "X-Username: admin" ^
-                     --data-raw "{\\"services\\":\\"z\\",\\"head\\":\\"lookup\\",\\"action\\":\\"set\\",\\"parameters\\":{\\"dig\\":{\\"url\\":\\"http://dev-escanai\\",\\"dnsIp\\":\\"8.8.8.8\\"}}}"
-                     
-                curl -X POST "http://192.168.0.150:8181/z" ^
+                     -H "Authorization: Bearer 56576214b49c5033" ^
+                     --data-raw "{\"url\":\"http://dev-escanai\",\"maxChildren\":\"0\",\"recurse\":true,\"subtreeOnly\":true,\"alertLimit\":10000}"
+
+                :: Fetch Spider Scan Data
+                curl -X POST "http://192.168.0.150:8181/api/spiderScanData" ^
                      -H "Content-Type: application/json" ^
-                     -H "charsets: utf-8" ^
-                     -H "X-Forwarded-For: 192.168.0.150" ^
-                     -H "X-Username: admin" ^
-                     --data-raw "{\\"services\\":\\"z\\",\\"head\\":\\"spiderScanData\\",\\"parameters\\":[{\\"scanList\\":{\\"dateUTC\\":{\\"after\\":\\"0\\"},\\"spiderScanId\\":{\\"noteq\\":\\"0\\"}}}],\\"action\\":\\"get\\"}"
-                     
-                curl -X POST "http://192.168.0.150:8181/z" ^
-                     -H "Content-Type: application/json" ^
-                     -H "charsets: utf-8" ^
-                     -H "X-Forwarded-For: 192.168.0.150" ^
-                     -H "X-Username: admin" ^
-                     --data-raw "{\\"services\\":\\"z\\",\\"head\\":\\"spiderScan\\",\\"action\\":\\"set\\",\\"parameters\\":{\\"scan\\":{\\"url\\":\\"http://dev-escanai\\",\\"maxChildren\\":\\"0\\",\\"recurse\\":true,\\"contextName\\":\\"\\",\\"subtreeOnly\\":true,\\"mode\\":true,\\"alertLimit\\":10000}},\\"parametersActiveScan\\":{\\"recurse\\":true,\\"inScopeOnly\\":false,\\"scanPolicyName\\":\\"Default Policy\\"}}"
+                     -H "Authorization: Bearer 56576214b49c5033" ^
+                     --data-raw "{\"dateUTC\":{\"after\":\"0\"},\"spiderScanId\":{\"noteq\":\"0\"}}"
                 '''
             }
         }
