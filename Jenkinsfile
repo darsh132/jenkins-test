@@ -29,17 +29,17 @@ pipeline {
                 }
                 bat 'node -v'  // Verify Node.js installation
                 bat 'npm -v'   // Verify npm installation
-                bat 'npm install --legacy-peer-deps --no-audit --no-fund --ci=false'
+                bat 'set CI=false && npm install --legacy-peer-deps --no-audit --no-fund'
             }
         }
         stage('Build') {
             steps {
-                bat 'npm run build'
+                bat 'set CI=false && npm run build'  // Prevent CI mode from treating warnings as errors
             }
         }
         stage('Test') {
             steps {
-                bat 'npm test -- --watchAll=false --ci=false'
+                bat 'set CI=false && npm test -- --watchAll=false'
             }
         }
         stage('Deploy') {
