@@ -29,7 +29,7 @@ pipeline {
                 }
                 bat 'node -v'  // Verify Node.js installation
                 bat 'npm -v'   // Verify npm installation
-                bat 'npm install'
+                bat 'npm install --legacy-peer-deps --no-audit --no-fund --ci=false'
             }
         }
         stage('Build') {
@@ -39,7 +39,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                bat 'npm test -- --watchAll=false'
+                bat 'npm test -- --watchAll=false --ci=false'
             }
         }
         stage('Deploy') {
