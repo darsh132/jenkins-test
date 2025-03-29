@@ -62,7 +62,7 @@ function StartChat() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="relative bg-[#d6d7ff] bg-opacity-30 backdrop-blur-lg border border-blue-100 shadow-2xl rounded-xl p-5"
+        className="relative bg-[#d6d7ff] border border-blue-100 shadow-2xl rounded-xl p-5"
       >
         <textarea
           id="message-input"
@@ -86,14 +86,14 @@ function StartChat() {
           </motion.div>
         )}
 
-        {/* Send Button with Animation */}
+        {/* Send Button */}
         <motion.button
           type="submit"
           disabled={!message.trim() || isProcessing}
           whileTap={{ scale: 0.9 }}
           className={`absolute bottom-4 right-4 flex items-center justify-center p-3 rounded-full shadow-md transition-all transform ${
             message.trim() && !isProcessing
-              ? "bg-orange-500 text-black hover:bg-orange-600"
+              ? "bg-blue-500 text-black hover:bg-blue-600"
               : "bg-gray-200 text-gray-400"
           }`}
         >
@@ -116,7 +116,7 @@ function StartChat() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className={`transition-all duration-500 ease-in-out mt-4 rounded-xl border border-blue-100 bg-[#d6d7ff] bg-opacity-30 backdrop-blur-lg p-4 shadow-lg ${
+        className={`transition-all duration-500 ease-in-out mt-4 rounded-xl border border-blue-100 bg-[#d6d7ff] p-4 shadow-lg ${
           hideSuggestions ? "max-h-14 overflow-hidden opacity-50" : "max-h-96 opacity-100"
         }`}
       >

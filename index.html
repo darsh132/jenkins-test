@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@10.0.0"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .progress-line {
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, #6D28D9, #2563EB, transparent);
+            position: absolute;
+            left: 20px;
+            top: 0;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 font-sans">
+    <div class="w-full md:px-10 relative" id="timeline-container">
+        <div class="max-w-7xl mx-auto py-20 px-4 md:px-8 lg:px-10">
+            <h2 class="text-lg md:text-4xl mb-4 text-black dark:text-white">Changelog from my journey</h2>
+            <p class="text-gray-700 dark:text-gray-300 text-sm md:text-base max-w-sm">
+                I've been working on Aceternity for the past 2 years. Here's a timeline of my journey.
+            </p>
+        </div>
+        <div class="relative max-w-7xl mx-auto pb-20">
+            <div id="progress-line" class="progress-line"></div>
+            <div id="timeline-entries">
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        gsap.registerPlugin(ScrollTrigger);
+                        
+                        const timelineData = [
+                            { title: "Started my Journey", content: "Built my first project!" },
+                            { title: "Learned React", content: "Dove deep into modern frontend development." },
+                            { title: "Explored GSAP", content: "Added animations and interactions to my projects." }
+                        ];
+                        
+                        const timelineContainer = document.getElementById("timeline-entries");
+                        timelineData.forEach((entry, index) => {
+                            const entryDiv = document.createElement("div");
+                            entryDiv.className = "flex justify-start pt-10 md:pt-40 md:gap-10 relative";
+                            entryDiv.innerHTML = `
+                                <div class="sticky top-40 flex flex-col md:flex-row z-40 items-center max-w-xs lg:max-w-sm md:w-full">
+                                    <div class="h-10 absolute left-3 w-10 rounded-full bg-white dark:bg-black flex items-center justify-center">
+                                        <div class="h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-2"></div>
+                                    </div>
+                                    <h3 class="hidden md:block text-xl md:pl-20 md:text-5xl font-bold text-gray-500 dark:text-gray-500">
+                                        ${entry.title}
+                                    </h3>
+                                </div>
+                                <div class="relative pl-20 pr-4 md:pl-4 w-full">
+                                    <h3 class="md:hidden block text-2xl mb-4 text-left font-bold text-gray-500 dark:text-gray-500">
+                                        ${entry.title}
+                                    </h3>
+                                    <p class="text-gray-700 dark:text-gray-300">${entry.content}</p>
+                                </div>
+                            `;
+                            timelineContainer.appendChild(entryDiv);
+                        });
+                        
+                        gsap.to("#progress-line", {
+                            height: "100%",
+                            scrollTrigger: {
+                                trigger: "#timeline-container",
+                                start: "top 10%",
+                                end: "bottom 50%",
+                                scrub: true,
+                            }
+                        });
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

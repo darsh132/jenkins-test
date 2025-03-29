@@ -10,6 +10,8 @@ import ViewAllChats from "./components/ViewAllChats";
 import Spinner from "./components/Spinner";
 import { RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
+import Time from "./components/Time";
+
 
 function App() {
   return (
@@ -76,6 +78,7 @@ const MainContent = () => {
             <Route path="/nc" element={<Dashboard />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/view-all-chats" element={<ViewAllChats />} />
+            <Route path="/timeline" element={<Time />} />
           </Routes>
         </motion.div>
       )}

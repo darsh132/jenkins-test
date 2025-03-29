@@ -89,11 +89,11 @@ const SignIn = () => {
           navigate("/dashboard");
         }
       } else {
-        setAlertMessage(result.message || "Login failed. Please try again.");
+        setAlertMessage("Login failed. Please try again.");
         setAlertType("error");
       }
     } catch (error) {
-      setAlertMessage(error.message || "Network error. Please try again.");
+      setAlertMessage("Server error. Please try again.");
       setAlertType("error");
     } finally {
       setIsSubmitting(false);

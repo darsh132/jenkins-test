@@ -48,11 +48,51 @@ const ArtifactViewer = ({ selectedArtifact, setSelectedArtifact }) => {
     }
   }, [selectedArtifact]);
 
+  // Auto recheck & re-render if content mismatches
+  useEffect(() => {
+    const checkMismatch = setInterval(() => {
+      if (selectedArtifact?.content && streamedContent !== selectedArtifact.content) {
+        console.warn("Mismatch detected! Re-rendering...");
+        setStreamedContent(selectedArtifact.content);
+      }
+    }, 500);
+
+    return () => clearInterval(checkMismatch);
+  }, [selectedArtifact, streamedContent]);
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(selectedArtifact?.content || "").then(() => {
+    const textToCopy = selectedArtifact?.content || "";
+    if (!textToCopy) return;
+  
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        })
+        .catch(() => {
+          fallbackCopyText(textToCopy);
+        });
+    } else {
+      fallbackCopyText(textToCopy);
+    }
+  };
+  
+  const fallbackCopyText = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "absolute";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch (err) {
+      console.error("Fallback copy failed", err);
+    }
+    document.body.removeChild(textarea);
   };
 
   const detectedLanguage = selectedArtifact?.language?.toLowerCase() || "plaintext";
@@ -154,12 +194,10 @@ const ArtifactsContainer = () => {
     console.log("artifact:", artifact);
   }, [artifact]);
 
-
   useEffect(() => {
     console.log("Selected Artifact in List:", selectedArtifact);
   }, [selectedArtifact]);
-  
-  
+
   if (!isArtifactOpen) return null;
 
   return selectedArtifact ? (
