@@ -45,7 +45,6 @@ pipeline {
                 }
                 bat 'node -v'
                 bat 'npm -v'
-                bat 'npm install --force --legacy-peer-deps --no-audit --no-fund'
             }
         }
         stage('Build') {
