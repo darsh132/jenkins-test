@@ -12,6 +12,16 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/darsh132/jenkins-test.git'
             }
         }
+        stage('Clean Workspace') {
+            steps {
+                script {
+                    bat 'echo Cleaning workspace...'
+                    bat 'rmdir /s /q node_modules'  // Delete node_modules if exists
+                    bat 'del /f /q package-lock.json'  // Remove package-lock.json
+                    bat 'del /f /q npm-shrinkwrap.json'  // Remove npm shrinkwrap if exists
+                }
+            }
+        }
         stage('Verify Environment') {
             steps {
                 script {
@@ -35,7 +45,7 @@ pipeline {
                 }
                 bat 'node -v'
                 bat 'npm -v'
-                bat 'npm install --legacy-peer-deps --no-audit --no-fund'
+                bat 'npm install --force --legacy-peer-deps --no-audit --no-fund'
             }
         }
         stage('Build') {
