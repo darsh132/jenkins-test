@@ -16,9 +16,6 @@ pipeline {
             steps {
                 script {
                     bat 'echo Cleaning workspace...'
-                    bat 'rmdir /s /q node_modules'  // Delete node_modules if exists
-                    bat 'del /f /q package-lock.json'  // Remove package-lock.json
-                    bat 'del /f /q npm-shrinkwrap.json'  // Remove npm shrinkwrap if exists
                 }
             }
         }
@@ -45,6 +42,7 @@ pipeline {
                 }
                 bat 'node -v'
                 bat 'npm -v'
+
             }
         }
         stage('Build') {
