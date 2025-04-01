@@ -36,6 +36,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
+                    // Ensure Node.js path is set
                     if (!env.PATH.contains(NODEJS_PATH)) {
                         env.PATH = "${NODEJS_PATH};${env.PATH}"
                     }
@@ -43,6 +44,22 @@ pipeline {
                 bat 'node -v'
                 bat 'npm -v'
 
+                // Ensure dependencies are installed
+                bat '''
+                if not exist node_modules (
+                    echo Installing dependencies...
+                    npm install
+                ) else (
+                    echo Dependencies already installed.
+                )
+                '''
+            }
+        }
+        stage('Check react-scripts') {
+            steps {
+                script {
+                    bat 'npm list react-scripts || npm install react-scripts --save-dev'
+                }
             }
         }
         stage('Build') {
@@ -50,7 +67,7 @@ pipeline {
                 bat '''
                 setlocal
                 set CI=false
-                npm run build
+                npm run build || (echo Build failed! Retrying... & npm install && npm run build)
                 endlocal
                 '''
             }
