@@ -14,18 +14,14 @@ pipeline {
         }
         stage('Clean Workspace') {
             steps {
-                script {
-                    bat 'echo Cleaning workspace...'
-                }
+                bat 'echo Cleaning workspace...'
             }
         }
         stage('Verify Environment') {
             steps {
-                script {
-                    bat 'echo Current PATH=%NODEJS_PATH%'
-                    bat 'where node'
-                    bat 'where npm'
-                }
+                bat 'echo Current PATH=%NODEJS_PATH%'
+                bat 'where node'
+                bat 'where npm'
             }
         }
         stage('Pre-Deployment API Calls') {
@@ -36,30 +32,30 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Ensure Node.js path is set
                     if (!env.PATH.contains(NODEJS_PATH)) {
                         env.PATH = "${NODEJS_PATH};${env.PATH}"
                     }
                 }
                 bat 'node -v'
                 bat 'npm -v'
-
-                // Ensure dependencies are installed
+                
+                // Force clean installation
                 bat '''
-                if not exist node_modules (
-                    echo Installing dependencies...
-                    npm install
-                ) else (
-                    echo Dependencies already installed.
-                )
+                echo Removing node_modules...
+                if exist node_modules rmdir /s /q node_modules
+                
+                echo Removing package-lock.json...
+                if exist package-lock.json del /f /q package-lock.json
+
+                echo Running fresh npm install...
+                npm install
                 '''
-            }
-        }
-        stage('Check react-scripts') {
-            steps {
-                script {
-                    bat 'npm list react-scripts || npm install react-scripts --save-dev'
-                }
+
+                // Ensure react-scripts is installed
+                bat '''
+                echo Checking react-scripts...
+                npm list react-scripts || (echo Installing react-scripts... & npm install react-scripts --save-dev)
+                '''
             }
         }
         stage('Build') {
@@ -84,9 +80,7 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                bat '''
-                xcopy /E /I /Y build C:\\inetpub\\wwwroot\\my-react-app
-                '''
+                bat 'xcopy /E /I /Y build C:\\inetpub\\wwwroot\\my-react-app'
             }
         }
         stage('Post-Deployment API Calls') {
