@@ -54,7 +54,7 @@ const Dashboard = () => {
 
   return (
     <div className="h-full font-serif text-gray-800">
-      <div className="fixed bg-[#e0e7ff] bg-opacity-20 backdrop-blur-md shadow-md w-full z-10 flex items-center px-6 py-3">
+      <div className="fixed bg-[#A9C3FE]/30 backdrop-blur-md border-b border-white/20 shadow-md w-full z-10 flex items-center px-6 py-3">
         <button className="md:hidden flex items-center text-gray-700 hover:text-gray-900 transition-all">
           <Menu size={24} />
         </button>
@@ -138,19 +138,25 @@ const Dashboard = () => {
 
       <style>
         {`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-          }
-          .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.3);
-          }
+          .custom-scrollbar {
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent; /* thumb and track for Firefox */
+}
+
+/* Chrome, Edge, Safari */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+}
         `}
       </style>
     </div>

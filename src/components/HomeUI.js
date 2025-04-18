@@ -86,11 +86,7 @@ function HomeUI({ isPinned, setIsPinned }) {
   src="https://escanav.com/en/images/escan7.png"
   alt="eScan Secure AI Logo"
   className="object-contain"
-  initial={{ opacity: 0, scale: 0.5, width: "100px", height: "50px", y: 50 }}
-  animate={{ opacity: 1, scale: 1, width: "200px", height: "100px", y: 0 }}
   transition={{ duration: 0.8, ease: "easeOut" }}
-  whileHover={{ scale: 1.1, rotate: 3, transition: { type: "spring", stiffness: 300 } }}
-  whileTap={{ scale: 0.95 }}
 />
 
             <motion.p className="text-2xl text-text1 font-bold bg-gradient-to-r from-[#224aff] via-[#091977] to-[#002f61] bg-clip-text text-transparent">

@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Home, Settings, HelpCircle, LogOut, ArrowRightToLine, MessageCircle, ChevronUp, PanelLeft } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  Home, Settings, HelpCircle, LogOut, ArrowRightToLine,
+  MessageCircle, ChevronUp, PanelLeft
+} from "lucide-react";
 import { NavItem } from "./NavItem";
 import { motion } from "framer-motion";
 import { Avatar } from "./Actions";
 import { useAuth } from "../context/Authcontext";
 import { useChat } from "../context/ChatContext";
-import { Link } from "react-router-dom";
 
 export function Sidebar({ onSidebarToggle }) {
   const [isExpanded, setIsExpanded] = useState(false);
-    const navigate = useNavigate();
   const [isPinned, setIsPinned] = useState(false);
-  const { promptHistory, setPromptHistory } = useChat();
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { promptHistory, setPromptHistory } = useChat();
   const { logout, authData } = useAuth();
 
   useEffect(() => {
@@ -24,22 +26,22 @@ export function Sidebar({ onSidebarToggle }) {
     const fetchPromptHistory = async () => {
       if (!authData?.user) return;
       try {
-        const response = await fetch(`http://192.168.0.235:3002/getsessions?username=${authData.user}`);
+        const username = encodeURIComponent(authData.user);
+        const response = await fetch(`http://192.168.0.235:3002/getsessions?username=${username}`);
         if (!response.ok) throw new Error(`Error: ${response.status}`);
+        const sessions = await response.json();
+        if (!Array.isArray(sessions)) throw new Error("Invalid response format");
 
-        const prompthistory = await response.json();
-        if (!Array.isArray(prompthistory)) throw new Error("Invalid response format");
-
-        const formattedHistory = prompthistory.flatMap(session => {
-          return session.messages.map(message => ({
+        const formatted = sessions.flatMap(session => {
+          return session.messages.map(msg => ({
             sessionId: session.sessionId,
-            message: message.userMessage || "(No message)"
+            message: msg.userMessage || "(No message)"
           }));
         });
 
-        setPromptHistory(formattedHistory);
+        setPromptHistory(formatted);
       } catch (err) {
-        console.error("Error fetching prompt history:", err);
+        console.error("Fetch failed:", err);
         setError(err.message);
       }
     };
@@ -54,8 +56,9 @@ export function Sidebar({ onSidebarToggle }) {
   const logoutUser = async () => {
     if (!authData?.user) return;
     try {
-      const response = await fetch(`http://192.168.0.235:3002/logout?username=${authData.user}`);
-      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      const username = encodeURIComponent(authData.user);
+      const response = await fetch(`http://192.168.0.235:3002/logout?username=${username}`);
+      if (!response.ok) throw new Error(`Logout failed: ${response.status}`);
       logout();
     } catch (err) {
       console.error("Logout failed:", err);
@@ -66,80 +69,100 @@ export function Sidebar({ onSidebarToggle }) {
   return (
     <div
       aria-label="Sidebar"
-      className={`fixed left-0 top-0 h-screen text-black transition-all duration-500 ease-in-out transform ${isExpanded || isPinned ? "w-64 bg-[#e0e7ff] bg-opacity-30 backdrop-blur-md border border-black/20 shadow-2xl rounded-xl z-10" : "w-16"}`}
+      className={`fixed left-0 top-0 h-screen text-black transition-all duration-500 ease-in-out transform z-50 ${
+        isExpanded || isPinned
+          ? "w-64 sidebar-bg border border-white/20  shadow-2xl rounded-xl"
+          : "w-16"
+      }`}
       onMouseEnter={() => !isPinned && setIsExpanded(true)}
       onMouseLeave={() => !isPinned && setIsExpanded(false)}
     >
+      {/* Top Section */}
       <div className="flex items-center justify-between p-4">
         {(isExpanded || isPinned) && (
           <>
             <motion.img
               src="https://escanav.com/en/images/escan7.png"
               alt="Logo"
-              className="h-16"
-              initial={{ opacity: 0, scale: 0.8 }}
+              className="h-12 w-auto object-contain"
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, ease: "easeInOut" }}
+              transition={{ duration: 0.8 }}
             />
-            <button className="flex justify-end" onClick={handlePinToggle}>
+            <button
+              className="ml-auto p-1"
+              aria-label="Toggle Pin Sidebar"
+              onClick={handlePinToggle}
+            >
               <ArrowRightToLine size={20} className={isPinned ? "text-blue-500" : "text-gray-500"} />
             </button>
           </>
         )}
       </div>
 
-      <div className="flex h-full flex-col">
-        <button className={`text-sm flex rounded-lg bg-[#DFE4F7] items-center font-bold m-4 p-4 transition-opacity duration-300 ${isExpanded || isPinned ? "border-2 border-blue-100" : "hidden"}`}>
-          <a href="/nc">{isExpanded ? "Start New Chat" : ""}</a>
-          <MessageCircle size={20} className="text-blue-500" />
-        </button>
-
-        <nav className="flex-1 space-y-4 mt-12 px-4">
-          <NavItem label="Recents" isExpanded={isExpanded || isPinned} />
-
-          {error && <p className="text-red-500 text-sm">Error: {error}</p>}
-
-          {promptHistory.length > 0 ? (
-            promptHistory.slice(0, 4).map((prompt, index) => (
-              <NavItem
-                key={index}
-                subLabel={prompt.message.length > 20 ? `${prompt.message.slice(0, 20)}...` : prompt.message}
-                href={`/c/${prompt.sessionId}`}
-                icon={<MessageCircle size={20} className="text-blue-400" />}
-                isExpanded={isExpanded || isPinned}
-              />
-            ))
-          ) : (
-            <p className="text-gray-500 text-sm">{isExpanded ? "No recent prompts" : ""}</p>
+      {/* Navigation Content */}
+      <div className="flex flex-col justify-between h-full">
+        <div>
+          {(isExpanded || isPinned) && (
+            <Link
+              to="/nc"
+              className="flex items-center gap-2 bg-[#DFE4F7] rounded-lg border-2 border-blue-100 m-4 p-3 font-semibold text-sm transition hover:bg-blue-100"
+            >
+              <MessageCircle size={18} className="text-blue-500" />
+              <span>Start New Chat</span>
+            </Link>
           )}
 
-          {promptHistory.length > 4 && (
-            <button
-            className={`text-sm flex items-center ml-6 font-bold mt-4 transition-opacity duration-300 ${
+          <nav className="mt-6 space-y-4 px-4">
+            <NavItem label="Recents" isExpanded={isExpanded || isPinned} />
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            {promptHistory.length > 0 ? (
+              promptHistory.slice(0, 4).map((prompt, i) => (
+                <NavItem
+                  key={i}
+                  subLabel={prompt.message.length > 20 ? `${prompt.message.slice(0, 20)}...` : prompt.message}
+                  href={`/c/${prompt.sessionId}`}
+                  icon={<MessageCircle size={20} className="text-blue-400" />}
+                  isExpanded={isExpanded || isPinned}
+                />
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">{(isExpanded || isPinned) && "No recent prompts"}</p>
+            )}
+
+            {promptHistory.length > 4 && (
+              <button
+                onClick={() => navigate("/view-all-chats")}
+                className={`flex items-center font-semibold text-sm ml-6 mt-4 transition-opacity ${
+                  isExpanded || isPinned ? "opacity-100" : "hidden"
+                }`}
+              >
+                View All <ArrowRightToLine size={18} className="ml-2" />
+              </button>
+            )}
+          </nav>
+        </div>
+
+        {/* Footer Section */}
+        <div className="px-4 mb-4">
+          <button
+            onClick={logoutUser}
+            className={`flex items-center text-sm font-semibold mt-2 ml-2 transition-opacity ${
               isExpanded || isPinned ? "opacity-100" : "hidden"
             }`}
-            onClick={() => navigate('/view-all-chats')} // Corrected this line
           >
-            View All <ArrowRightToLine size={20} className="ml-2" />
+            Logout <LogOut size={18} className="ml-2" />
           </button>
-          
-          )}
 
-          <div className="fixed inset-x-0 bottom-24 px-4">
-            <button
-              className={`text-sm flex items-center ml-6 font-bold mt-4 transition-opacity duration-300 ${isExpanded || isPinned ? "opacity-100" : "hidden"}`}
-              onClick={logoutUser}
-            >
-              Logout <LogOut size={20} className="ml-2" />
-            </button>
-            <PanelLeft size={20} className="m-4" />
-          </div>
-
-          <div className={`fixed p-4 rounded-lg mr-4 bottom-8 w-52 flex ${isExpanded ? "bg-[#DFE4F7] border border-blue-100" : ""}`}>
+          <div className="mt-6 flex items-center gap-2 p-3 bg-[#DFE4F7] border border-blue-100 rounded-lg">
             <Avatar role={authData?.user?.charAt(0) || "?"} />
-            <NavItem icon={<ChevronUp size={20} />} label={authData?.user} isExpanded={isExpanded || isPinned} />
+            {(isExpanded || isPinned) && (
+              <NavItem icon={<ChevronUp size={20} />} label={authData?.user} isExpanded />
+            )}
           </div>
-        </nav>
+        </div>
       </div>
     </div>
   );

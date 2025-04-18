@@ -62,7 +62,7 @@ function StartChat() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="relative bg-[#d6d7ff] border border-blue-100 shadow-2xl rounded-xl p-5"
+        className="relative bg-white/20 backdrop-blur-md border-white/30 border border-blue-100 shadow-2xl rounded-xl p-5"
       >
         <textarea
           id="message-input"
@@ -116,7 +116,7 @@ function StartChat() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className={`transition-all duration-500 ease-in-out mt-4 rounded-xl border border-blue-100 bg-[#d6d7ff] p-4 shadow-lg ${
+        className={`transition-all duration-500 ease-in-out mt-4 rounded-xl border-blue-100 bg-white/20 backdrop-blur-md border border-white/30 shadow-md p-4 ${
           hideSuggestions ? "max-h-14 overflow-hidden opacity-50" : "max-h-96 opacity-100"
         }`}
       >

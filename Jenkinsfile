@@ -26,7 +26,7 @@ pipeline {
         }
         stage('Pre-Deployment API Calls') {
             steps {
-                bat 'C:\\NemasisDAST\\predeployment.bat'
+                bat 'C:\\NemasisDAST\\nemasis_predeploy.bat'
             }
         }
         stage('Install Dependencies') {
@@ -85,7 +85,7 @@ pipeline {
         }
         stage('Post-Deployment API Calls') {
             steps {
-                bat 'C:\\NemasisDAST\\postdeployment.bat'
+                bat 'C:\\NemasisDAST\\nemasis_postdeploy.bat'
             }
         }
     }

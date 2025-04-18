@@ -5,7 +5,7 @@ function ChatCard({ chat, isCollapsed, delay }) {
   return (
     <Link
       to={`/c/${chat.sessionId}`} // Using sessionId dynamically
-      className={`${isCollapsed ? "scale-90 pointer-events-none" : "opacity-100 scale-100"} cursor-pointer rounded-xl border border-borderclr2 bg-bg5 p-3 opacity-0 transition-all duration-300 hover:border-borderclr hover:bg-bg2`}
+      className={`${isCollapsed ? "scale-90 pointer-events-none" : "opacity-100 scale-100"} cursor-pointer border-2 border-blue-100 bg-[#DFE4F7] rounded-xl p-3 opacity-0 transition-all duration-300 hover:border-borderclr hover:bg-bg2`}
       style={{
         transition: `opacity 250ms ${delay_css}, transform 250ms ${delay_css}, color 150ms 0ms, background-color 150ms 0ms, border-color 150ms 0ms`,
       }}

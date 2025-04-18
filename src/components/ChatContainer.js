@@ -104,7 +104,7 @@ const ChatContainer = ({ onStop, onRegenerate }) => {
         </motion.button>
       </div>*/}
 
-      <div ref={containerRef} className="h-full overflow-y-auto px-4 py-6 scroll-smooth">
+      <div ref={containerRef} className="h-full px-4 py-6">
         {Object.keys(conversations).length > 0 ? (
           <motion.div
             key={currentBranchIndex}
